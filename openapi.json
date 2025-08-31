@@ -1,0 +1,882 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FPL MCP Server",
+    "description": "Fantasy Premier League MCP-compatible server exposing bootstrap, fixtures, and manager tools.",
+    "version": "0.1.0"
+  },
+  "servers": [
+    {
+      "url": "https://fpl-mcp.onrender.com",
+      "description": "FPL MCP Server"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": ["health"],
+        "summary": "Health",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/HealthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_bootstrap_data": {
+      "get": {
+        "tags": ["tools"],
+        "summary": "Bootstrap data (teams, players)",
+        "description": "Teams and players from FPL bootstrap-static (selected fields).",
+        "operationId": "get_bootstrap_data_tools_get_bootstrap_data_get",
+        "responses": {
+          "200": {
+            "description": "Slim bootstrap payload",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/BootstrapSlim" },
+                "examples": {
+                  "default": {
+                    "summary": "Example",
+                    "value": {
+                      "teams": [{ "id": 1, "name": "Arsenal", "strength": 4 }],
+                      "players": [
+                        {
+                          "id": 1,
+                          "web_name": "Player",
+                          "now_cost": 45,
+                          "form": "1.2",
+                          "ict_index": "4.5",
+                          "minutes": 270,
+                          "team": 1
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "502": { "description": "Upstream FPL API error" },
+          "422": { "description": "Validation error" }
+        }
+      }
+    },
+    "/tools/get_fixtures": {
+      "get": {
+        "tags": ["tools"],
+        "summary": "All fixtures",
+        "description": "Full list of FPL fixtures.",
+        "operationId": "get_fixtures_tools_get_fixtures_get",
+        "responses": {
+          "200": {
+            "description": "Fixtures list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FixturesResponse" },
+                "examples": {
+                  "default": {
+                    "summary": "Example",
+                    "value": { "fixtures": [{ "id": 1, "event": 1, "team_h": 1, "team_a": 2 }] }
+                  }
+                }
+              }
+            }
+          },
+          "502": { "description": "Upstream FPL API error" }
+        }
+      }
+    },
+    "/tools/get_fixtures_by_gw/{gw}": {
+      "get": {
+        "tags": ["tools"],
+        "summary": "Fixtures by gameweek",
+        "description": "Fixtures filtered by a specific gameweek (event).",
+        "operationId": "get_fixtures_by_gw_tools_get_fixtures_by_gw__gw__get",
+        "parameters": [
+          { "name": "gw", "in": "path", "required": true, "schema": { "type": "integer", "title": "Gw" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Filtered fixtures list",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/FixturesResponse" },
+                "examples": {
+                  "default": {
+                    "summary": "Example",
+                    "value": { "fixtures": [{ "id": 2, "event": 3, "team_h": 3, "team_a": 4 }] }
+                  }
+                }
+              }
+            }
+          },
+          "422": { "description": "Validation error" },
+          "502": { "description": "Upstream FPL API error" }
+        }
+      }
+    },
+    "/tools/get_manager_picks/{tid}/{gw}": {
+      "get": {
+        "tags": ["tools"],
+        "summary": "Manager picks",
+        "description": "Manager's picks for an entry (team id) and gameweek. Add ?expand=true to include player and fixture context.",
+        "operationId": "get_manager_picks_tools_get_manager_picks__tid___gw__get",
+        "parameters": [
+          { "name": "tid", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tid" } },
+          { "name": "gw", "in": "path", "required": true, "schema": { "type": "integer", "title": "Gw" } },
+          { "name": "expand", "in": "query", "required": false, "schema": { "type": "boolean", "default": false, "title": "Expand" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Manager picks",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/ManagerPicks" },
+                "examples": {
+                  "default": {
+                    "summary": "Example",
+                    "value": {
+                      "picks": [{ "element": 1, "is_captain": true, "is_vice_captain": false, "multiplier": 2 }]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": { "description": "Validation error" },
+          "502": { "description": "Upstream FPL API error" }
+        }
+      }
+    },
+    "/tools/get_manager_gameweek_summary/{tid}/{gw}": {
+      "get": {
+        "tags": ["tools"],
+        "summary": "Manager GW summary",
+        "description": "Picks, template/differential split, and top captain candidates for a GW. Add ?expand=true for denormalized fields.",
+        "operationId": "get_manager_gameweek_summary_tools_get_manager_gameweek_summary__tid___gw__get",
+        "parameters": [
+          { "name": "tid", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tid" } },
+          { "name": "gw", "in": "path", "required": true, "schema": { "type": "integer", "title": "Gw" } },
+          { "name": "expand", "in": "query", "required": false, "schema": { "type": "boolean", "default": false, "title": "Expand" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "GW summary",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GWManagerSummary" },
+                "examples": {
+                  "default": {
+                    "summary": "Example",
+                    "value": {
+                      "gw": 1,
+                      "picks": [{ "element": 1, "is_captain": true, "is_vice_captain": false }],
+                      "template_vs_differential": { "template_count": 7, "differential_count": 4, "template_ratio": 0.636 },
+                      "captain_candidates": [
+                        { "element": 1, "score": 5.1 },
+                        { "element": 2, "score": 4.7 },
+                        { "element": 3, "score": 4.1 }
+                      ]
+                    }
+                  },
+                  "expanded": {
+                    "summary": "Expanded snippet",
+                    "value": {
+                      "gw": 1,
+                      "picks_expanded": [
+                        {
+                          "player": {
+                            "id": 381,
+                            "name": "Saka",
+                            "team_id": 1,
+                            "team_name": "Arsenal",
+                            "position": "MID",
+                            "now_cost": 86,
+                            "ownership_pct": 64.3
+                          },
+                          "is_captain": true,
+                          "is_vice_captain": false,
+                          "fixture": {
+                            "opponent_team_id": 10,
+                            "opponent_team_name": "Chelsea",
+                            "opponent_strength": 3,
+                            "was_home": true
+                          }
+                        }
+                      ],
+                      "captain_candidates_expanded": [
+                        { "player": { "id": 381, "name": "Saka", "team_id": 1, "team_name": "Arsenal", "position": "MID" }, "score": 19.2 }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": { "description": "Validation error" },
+          "502": { "description": "Upstream FPL API error" }
+        }
+      }
+    },
+    "/tools/get_manager_gameweek_analysis/{tid}/{gw}": {
+      "get": {
+        "tags": ["tools"],
+        "summary": "Manager GW analysis",
+        "description": "Captain picks, EPΔ per player, and simple transfer suggestions. Query params: expand=true for denormalized fields; mode=safe|aggressive (default aggressive); allow_hit=true to allow a 0.4m budget deficit (simulating -4); bank_override=<int 0.1m units> to override bank.",
+        "operationId": "get_manager_gameweek_analysis_tools_get_manager_gameweek_analysis__tid___gw__get",
+        "parameters": [
+          { "name": "tid", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tid" } },
+          { "name": "gw", "in": "path", "required": true, "schema": { "type": "integer", "title": "Gw" } },
+          { "name": "expand", "in": "query", "required": false, "schema": { "type": "boolean", "default": false, "title": "Expand" } },
+          { "name": "mode", "in": "query", "required": false, "schema": { "enum": ["safe", "aggressive"], "type": "string", "default": "aggressive", "title": "Mode" } },
+          { "name": "allow_hit", "in": "query", "required": false, "schema": { "type": "boolean", "default": false, "title": "Allow Hit" } },
+          { "name": "bank_override", "in": "query", "required": false, "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Bank Override" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "GW analysis",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GWManagerAnalysis" },
+                "examples": {
+                  "default": {
+                    "summary": "Example",
+                    "value": {
+                      "gw": 1,
+                      "recommended_captain_safe": { "element": 1, "score": 5.2 },
+                      "recommended_captain_aggressive": { "element": 2, "score": 5.0 },
+                      "epdeltas": [
+                        { "element": 1, "epdelta": 3.4, "opponent_team": 2, "opponent_strength": 3, "was_home": true }
+                      ],
+                      "transfer_suggestions": [
+                        { "out_element": 3, "in_element": 10, "reason": "Higher projected EPΔ", "epdelta_gain": 1.1 }
+                      ]
+                    }
+                  },
+                  "expanded": {
+                    "summary": "Expanded snippet",
+                    "value": {
+                      "recommended_captain_safe_expanded": {
+                        "player": { "id": 381, "name": "Saka", "team_id": 1, "team_name": "Arsenal", "position": "MID" },
+                        "score": 19.2
+                      },
+                      "epdeltas_expanded": [
+                        {
+                          "player": { "id": 381, "name": "Saka" },
+                          "epdelta": 2.09,
+                          "fixture": {
+                            "opponent_team_id": 10,
+                            "opponent_team_name": "Chelsea",
+                            "opponent_strength": 3,
+                            "was_home": true
+                          }
+                        }
+                      ],
+                      "transfer_suggestions_expanded": [
+                        { "out": { "id": 3 }, "in_": { "id": 10 }, "reason": "Higher projected EPΔ", "epdelta_gain": 1.99 }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "422": { "description": "Validation error" },
+          "502": { "description": "Upstream FPL API error" }
+        }
+      }
+    },
+    "/tools/get_names_index": {
+      "get": {
+        "tags": ["tools"],
+        "summary": "Names index",
+        "description": "IDs mapped to human-friendly player and team names.",
+        "operationId": "get_names_index_tools_get_names_index_get",
+        "responses": {
+          "200": {
+            "description": "Names index",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/NamesIndex" },
+                "examples": {
+                  "default": {
+                    "summary": "Example",
+                    "value": { "players": { "381": { "name": "Saka", "team_id": 1, "team_name": "Arsenal", "position": "MID" } }, "teams": { "1": "Arsenal" } }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/tools/get_gameweek_planner/{tid}/{gw}": {
+      "get": {
+        "tags": ["tools"],
+        "summary": "Gameweek Planner",
+        "description": "Optimize XI, bench, and captain/vice for a target GW. Default picks_strategy=latest uses your last live GW squad; picks_strategy=exact requires target-GW picks. Use expand=true for denormalized fields; include_transfers adds legal suggestions.",
+        "operationId": "get_gameweek_planner_tools_get_gameweek_planner__tid___gw__get",
+        "parameters": [
+          { "name": "tid", "in": "path", "required": true, "schema": { "type": "integer", "title": "Tid" } },
+          { "name": "gw", "in": "path", "required": true, "schema": { "type": "integer", "title": "Gw" } },
+          {
+            "name": "expand",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "description": "Include denormalized fields (LLM-friendly)", "default": false, "title": "Expand" },
+            "description": "Include denormalized fields (LLM-friendly)"
+          },
+          {
+            "name": "mode",
+            "in": "query",
+            "required": false,
+            "schema": { "enum": ["safe", "aggressive"], "type": "string", "description": "Captain preference: safe (template) or aggressive (differentials)", "default": "safe", "title": "Mode" },
+            "description": "Captain preference: safe (template) or aggressive (differentials)"
+          },
+          {
+            "name": "include_transfers",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "description": "Include legal transfer suggestions", "default": true, "title": "Include Transfers" },
+            "description": "Include legal transfer suggestions"
+          },
+          {
+            "name": "allow_hit",
+            "in": "query",
+            "required": false,
+            "schema": { "type": "boolean", "description": "Allow 0.4m deficit (simulate -4) for transfers", "default": false, "title": "Allow Hit" },
+            "description": "Allow 0.4m deficit (simulate -4) for transfers"
+          },
+          {
+            "name": "bank_override",
+            "in": "query",
+            "required": false,
+            "schema": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "description": "Override bank in 0.1m units for transfer checks", "title": "Bank Override" },
+            "description": "Override bank in 0.1m units for transfer checks"
+          },
+          {
+            "name": "picks_strategy",
+            "in": "query",
+            "required": false,
+            "schema": { "enum": ["latest", "exact"], "type": "string", "description": "Use last live GW squad when exact GW picks unavailable (latest) or require exact GW picks (exact)", "default": "latest", "title": "Picks Strategy" },
+            "description": "Use last live GW squad when exact GW picks unavailable (latest) or require exact GW picks (exact)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Planner response (compact + optional expanded)",
+            "content": { "application/json": { "schema": { "$ref": "#/components/schemas/GWPlannerResponse" } } }
+          },
+          "422": { "description": "Validation error" },
+          "404": { "description": "Manager picks not found" },
+          "502": { "description": "Upstream FPL API error" }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "BootstrapPlayer": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id" },
+          "web_name": { "type": "string", "title": "Web Name" },
+          "now_cost": { "type": "integer", "title": "Now Cost" },
+          "form": { "type": "string", "title": "Form" },
+          "ict_index": { "type": "string", "title": "Ict Index" },
+          "minutes": { "type": "integer", "title": "Minutes" },
+          "team": { "type": "integer", "title": "Team" }
+        },
+        "type": "object",
+        "required": ["id", "web_name", "now_cost", "form", "ict_index", "minutes", "team"],
+        "title": "BootstrapPlayer",
+        "description": "Subset of player fields used by this service.\n\nNote: FPL API returns some numeric-looking fields as strings (e.g., form, ict_index)."
+      },
+      "BootstrapSlim": {
+        "properties": {
+          "teams": { "items": { "$ref": "#/components/schemas/BootstrapTeam" }, "type": "array", "title": "Teams" },
+          "players": { "items": { "$ref": "#/components/schemas/BootstrapPlayer" }, "type": "array", "title": "Players" }
+        },
+        "type": "object",
+        "required": ["teams", "players"],
+        "title": "BootstrapSlim",
+        "description": "Slim view of bootstrap data with only the fields we use."
+      },
+      "BootstrapTeam": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id" },
+          "name": { "type": "string", "title": "Name" },
+          "strength": { "type": "integer", "title": "Strength" }
+        },
+        "type": "object",
+        "required": ["id", "name", "strength"],
+        "title": "BootstrapTeam"
+      },
+      "CaptainCandidate": {
+        "properties": {
+          "element": { "type": "integer", "title": "Element" },
+          "score": { "type": "number", "title": "Score" }
+        },
+        "type": "object",
+        "required": ["element", "score"],
+        "title": "CaptainCandidate"
+      },
+      "CaptainCandidateExpanded": {
+        "properties": {
+          "player": { "$ref": "#/components/schemas/PlayerRefExpanded" },
+          "score": { "type": "number", "title": "Score" }
+        },
+        "type": "object",
+        "required": ["player", "score"],
+        "title": "CaptainCandidateExpanded"
+      },
+      "ChipAction": {
+        "properties": {
+          "type": { "type": "string", "const": "chip", "title": "Type", "default": "chip" },
+          "action_group": { "type": "string", "const": "chip", "title": "Action Group", "default": "chip" },
+          "priority": { "type": "integer", "title": "Priority" },
+          "bundle_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Bundle Id" },
+          "chip": { "type": "string", "enum": ["BB", "TC", "FH", "WC", "NONE"], "title": "Chip" },
+          "reason_code": { "anyOf": [{ "type": "string", "const": "below_threshold" }, { "type": "null" }], "title": "Reason Code" },
+          "details": { "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }], "title": "Details" }
+        },
+        "type": "object",
+        "required": ["priority", "chip"],
+        "title": "ChipAction"
+      },
+      "ChipActionExpanded": {
+        "properties": {
+          "type": { "type": "string", "const": "chip", "title": "Type", "default": "chip" },
+          "action_group": { "type": "string", "const": "chip", "title": "Action Group", "default": "chip" },
+          "priority": { "type": "integer", "title": "Priority" },
+          "bundle_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Bundle Id" },
+          "chip": { "type": "string", "enum": ["BB", "TC", "FH", "WC", "NONE"], "title": "Chip" },
+          "reason_code": { "anyOf": [{ "type": "string", "const": "below_threshold" }, { "type": "null" }], "title": "Reason Code" },
+          "details": { "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }], "title": "Details" }
+        },
+        "type": "object",
+        "required": ["priority", "chip"],
+        "title": "ChipActionExpanded"
+      },
+      "CompactFixtureCtx": {
+        "properties": {
+          "opponent_team_id": { "type": "integer", "title": "Opponent Team Id" },
+          "opponent_strength": { "type": "integer", "title": "Opponent Strength" },
+          "was_home": { "type": "boolean", "title": "Was Home" }
+        },
+        "type": "object",
+        "required": ["opponent_team_id", "opponent_strength", "was_home"],
+        "title": "CompactFixtureCtx"
+      },
+      "EPDeltaExpandedRow": {
+        "properties": {
+          "player": { "$ref": "#/components/schemas/PlayerRefExpanded" },
+          "epdelta": { "type": "number", "title": "Epdelta" },
+          "fixture": { "anyOf": [{ "$ref": "#/components/schemas/FixtureCtxExpanded" }, { "type": "null" }] }
+        },
+        "type": "object",
+        "required": ["player", "epdelta"],
+        "title": "EPDeltaExpandedRow"
+      },
+      "EPDeltaRow": {
+        "properties": {
+          "element": { "type": "integer", "title": "Element" },
+          "epdelta": { "type": "number", "title": "Epdelta" },
+          "opponent_team": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Opponent Team" },
+          "opponent_strength": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Opponent Strength" },
+          "was_home": { "anyOf": [{ "type": "boolean" }, { "type": "null" }], "title": "Was Home" }
+        },
+        "type": "object",
+        "required": ["element", "epdelta"],
+        "title": "EPDeltaRow"
+      },
+      "Fixture": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id" },
+          "event": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Event" },
+          "team_h": { "type": "integer", "title": "Team H" },
+          "team_a": { "type": "integer", "title": "Team A" }
+        },
+        "type": "object",
+        "required": ["id", "team_h", "team_a"],
+        "title": "Fixture"
+      },
+      "FixtureCtxExpanded": {
+        "properties": {
+          "opponent_team_id": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Opponent Team Id" },
+          "opponent_team_name": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Opponent Team Name" },
+          "opponent_strength": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Opponent Strength" },
+          "was_home": { "anyOf": [{ "type": "boolean" }, { "type": "null" }], "title": "Was Home" }
+        },
+        "type": "object",
+        "title": "FixtureCtxExpanded"
+      },
+      "FixturesResponse": {
+        "properties": {
+          "fixtures": { "items": { "$ref": "#/components/schemas/Fixture" }, "type": "array", "title": "Fixtures" }
+        },
+        "type": "object",
+        "required": ["fixtures"],
+        "title": "FixturesResponse"
+      },
+      "GWManagerAnalysis": {
+        "properties": {
+          "gw": { "type": "integer", "title": "Gw" },
+          "recommended_captain_safe": { "$ref": "#/components/schemas/CaptainCandidate" },
+          "recommended_captain_aggressive": { "$ref": "#/components/schemas/CaptainCandidate" },
+          "epdeltas": { "items": { "$ref": "#/components/schemas/EPDeltaRow" }, "type": "array", "title": "Epdeltas" },
+          "transfer_suggestions": { "items": { "$ref": "#/components/schemas/TransferSuggestion" }, "type": "array", "title": "Transfer Suggestions" },
+          "epdeltas_expanded": { "anyOf": [{ "items": { "$ref": "#/components/schemas/EPDeltaExpandedRow" }, "type": "array" }, { "type": "null" }], "title": "Epdeltas Expanded" },
+          "recommended_captain_safe_expanded": { "anyOf": [{ "$ref": "#/components/schemas/CaptainCandidateExpanded" }, { "type": "null" }] },
+          "recommended_captain_aggressive_expanded": { "anyOf": [{ "$ref": "#/components/schemas/CaptainCandidateExpanded" }, { "type": "null" }] },
+          "transfer_suggestions_expanded": { "anyOf": [{ "items": { "$ref": "#/components/schemas/TransferSuggestionExpanded" }, "type": "array" }, { "type": "null" }], "title": "Transfer Suggestions Expanded" }
+        },
+        "type": "object",
+        "required": ["gw", "recommended_captain_safe", "recommended_captain_aggressive", "epdeltas", "transfer_suggestions"],
+        "title": "GWManagerAnalysis"
+      },
+      "GWManagerSummary": {
+        "properties": {
+          "gw": { "type": "integer", "title": "Gw" },
+          "picks": { "items": { "$ref": "#/components/schemas/PickNote" }, "type": "array", "title": "Picks" },
+          "template_vs_differential": { "$ref": "#/components/schemas/TemplateDifferential" },
+          "captain_candidates": { "items": { "$ref": "#/components/schemas/CaptainCandidate" }, "type": "array", "title": "Captain Candidates" },
+          "picks_expanded": { "anyOf": [{ "items": { "$ref": "#/components/schemas/PicksExpandedItem" }, "type": "array" }, { "type": "null" }], "title": "Picks Expanded" },
+          "captain_candidates_expanded": { "anyOf": [{ "items": { "$ref": "#/components/schemas/CaptainCandidateExpanded" }, "type": "array" }, { "type": "null" }], "title": "Captain Candidates Expanded" }
+        },
+        "type": "object",
+        "required": ["gw", "picks", "template_vs_differential", "captain_candidates"],
+        "title": "GWManagerSummary"
+      },
+      "GWPlannerLite": {
+        "properties": {
+          "gw": { "type": "integer", "title": "Gw" },
+          "picks_gw_used": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Picks Gw Used" },
+          "formation_current": { "type": "string", "title": "Formation Current" },
+          "formation_optimal": { "type": "string", "title": "Formation Optimal" },
+          "current_start": { "items": { "type": "integer" }, "type": "array", "title": "Current Start" },
+          "current_bench": { "items": { "type": "integer" }, "type": "array", "title": "Current Bench" },
+          "optimal_start": { "items": { "type": "integer" }, "type": "array", "title": "Optimal Start" },
+          "optimal_bench": { "items": { "type": "integer" }, "type": "array", "title": "Optimal Bench" },
+          "captain": { "type": "integer", "title": "Captain" },
+          "vice_captain": { "type": "integer", "title": "Vice Captain" },
+          "ep_total_current": { "type": "number", "title": "Ep Total Current" },
+          "ep_total_optimal": { "type": "number", "title": "Ep Total Optimal" },
+          "ep_gain_lineup": { "type": "number", "title": "Ep Gain Lineup" },
+          "bench_ep_total": { "type": "number", "title": "Bench Ep Total" },
+          "chip_eval": { "additionalProperties": true, "type": "object", "title": "Chip Eval" },
+          "per_player_ep": { "additionalProperties": { "type": "number" }, "type": "object", "title": "Per Player Ep" }
+        },
+        "type": "object",
+        "required": [
+          "gw",
+          "formation_current",
+          "formation_optimal",
+          "current_start",
+          "current_bench",
+          "optimal_start",
+          "optimal_bench",
+          "captain",
+          "vice_captain",
+          "ep_total_current",
+          "ep_total_optimal",
+          "ep_gain_lineup",
+          "bench_ep_total",
+          "chip_eval",
+          "per_player_ep"
+        ],
+        "title": "GWPlannerLite"
+      },
+      "GWPlannerResponse": {
+        "properties": {
+          "schema_version": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Schema Version" },
+          "generated_at": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Generated At" },
+          "meta": { "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }], "title": "Meta" },
+          "data": { "$ref": "#/components/schemas/GWPlannerLite" },
+          "actions": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    { "$ref": "#/components/schemas/SwapAction" },
+                    { "$ref": "#/components/schemas/SetCaptainAction" },
+                    { "$ref": "#/components/schemas/SetViceAction" },
+                    { "$ref": "#/components/schemas/ChipAction" }
+                  ]
+                },
+                "type": "array"
+              },
+              { "type": "null" }
+            ],
+            "title": "Actions"
+          },
+          "actions_expanded": {
+            "anyOf": [
+              {
+                "items": {
+                  "anyOf": [
+                    { "$ref": "#/components/schemas/SwapActionExpanded" },
+                    { "$ref": "#/components/schemas/SetCaptainActionExpanded" },
+                    { "$ref": "#/components/schemas/SetViceActionExpanded" },
+                    { "$ref": "#/components/schemas/ChipActionExpanded" }
+                  ]
+                },
+                "type": "array"
+              },
+              { "type": "null" }
+            ],
+            "title": "Actions Expanded"
+          },
+          "summary": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Summary" },
+          "summary_long": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Summary Long" },
+          "current_expanded": { "anyOf": [{ "items": { "$ref": "#/components/schemas/PlannerPlayerSlot" }, "type": "array" }, { "type": "null" }], "title": "Current Expanded" },
+          "optimal_expanded": { "anyOf": [{ "items": { "$ref": "#/components/schemas/PlannerPlayerSlot" }, "type": "array" }, { "type": "null" }], "title": "Optimal Expanded" },
+          "bench_expanded": { "anyOf": [{ "items": { "$ref": "#/components/schemas/PlannerPlayerSlot" }, "type": "array" }, { "type": "null" }], "title": "Bench Expanded" },
+          "transfer_suggestions": { "anyOf": [{ "items": { "$ref": "#/components/schemas/TransferSuggestion" }, "type": "array" }, { "type": "null" }], "title": "Transfer Suggestions" },
+          "transfer_suggestions_expanded": {
+            "anyOf": [{ "items": { "$ref": "#/components/schemas/TransferSuggestionExpanded" }, "type": "array" }, { "type": "null" }],
+            "title": "Transfer Suggestions Expanded"
+          }
+        },
+        "type": "object",
+        "required": ["data"],
+        "title": "GWPlannerResponse"
+      },
+      "HealthResponse": {
+        "properties": { "status": { "type": "string", "const": "ok", "title": "Status" } },
+        "type": "object",
+        "required": ["status"],
+        "title": "HealthResponse"
+      },
+      "ManagerPick": {
+        "properties": {
+          "element": { "type": "integer", "title": "Element" },
+          "is_captain": { "type": "boolean", "title": "Is Captain" },
+          "is_vice_captain": { "type": "boolean", "title": "Is Vice Captain" },
+          "multiplier": { "type": "integer", "title": "Multiplier" }
+        },
+        "type": "object",
+        "required": ["element", "is_captain", "is_vice_captain", "multiplier"],
+        "title": "ManagerPick"
+      },
+      "ManagerPicks": {
+        "properties": {
+          "picks": { "items": { "$ref": "#/components/schemas/ManagerPick" }, "type": "array", "title": "Picks" },
+          "picks_expanded": { "anyOf": [{ "items": { "$ref": "#/components/schemas/PicksExpandedItem" }, "type": "array" }, { "type": "null" }], "title": "Picks Expanded" }
+        },
+        "type": "object",
+        "required": ["picks"],
+        "title": "ManagerPicks"
+      },
+      "NamesIndex": {
+        "properties": {
+          "players": { "additionalProperties": { "$ref": "#/components/schemas/NamesIndexPlayer" }, "type": "object", "title": "Players" },
+          "teams": { "additionalProperties": { "anyOf": [{ "type": "string" }, { "type": "null" }] }, "type": "object", "title": "Teams" }
+        },
+        "type": "object",
+        "required": ["players", "teams"],
+        "title": "NamesIndex"
+      },
+      "NamesIndexPlayer": {
+        "properties": {
+          "name": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Name" },
+          "team_id": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Team Id" },
+          "team_name": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Team Name" },
+          "position": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Position" }
+        },
+        "type": "object",
+        "title": "NamesIndexPlayer"
+      },
+      "PickNote": {
+        "properties": {
+          "element": { "type": "integer", "title": "Element" },
+          "is_captain": { "type": "boolean", "title": "Is Captain" },
+          "is_vice_captain": { "type": "boolean", "title": "Is Vice Captain" }
+        },
+        "type": "object",
+        "required": ["element", "is_captain", "is_vice_captain"],
+        "title": "PickNote"
+      },
+      "PicksExpandedItem": {
+        "properties": {
+          "player": { "$ref": "#/components/schemas/PlayerRefExpanded" },
+          "is_captain": { "type": "boolean", "title": "Is Captain" },
+          "is_vice_captain": { "type": "boolean", "title": "Is Vice Captain" },
+          "fixture": { "anyOf": [{ "$ref": "#/components/schemas/FixtureCtxExpanded" }, { "type": "null" }] }
+        },
+        "type": "object",
+        "required": ["player", "is_captain", "is_vice_captain"],
+        "title": "PicksExpandedItem"
+      },
+      "PlannerPlayerSlot": {
+        "properties": {
+          "player": { "$ref": "#/components/schemas/PlayerRefExpanded" },
+          "fixture": { "anyOf": [{ "$ref": "#/components/schemas/FixtureCtxExpanded" }, { "type": "null" }] },
+          "epdelta": { "type": "number", "title": "Epdelta" },
+          "is_captain": { "type": "boolean", "title": "Is Captain" },
+          "is_vice_captain": { "type": "boolean", "title": "Is Vice Captain" }
+        },
+        "type": "object",
+        "required": ["player", "epdelta", "is_captain", "is_vice_captain"],
+        "title": "PlannerPlayerSlot"
+      },
+      "PlayerRefExpanded": {
+        "properties": {
+          "id": { "type": "integer", "title": "Id" },
+          "name": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Name" },
+          "team_id": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Team Id" },
+          "team_name": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Team Name" },
+          "position": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Position" },
+          "now_cost": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Now Cost" },
+          "ownership_pct": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Ownership Pct" }
+        },
+        "type": "object",
+        "required": ["id"],
+        "title": "PlayerRefExpanded"
+      },
+      "SetCaptainAction": {
+        "properties": {
+          "type": { "type": "string", "const": "set_captain", "title": "Type", "default": "set_captain" },
+          "action_group": { "type": "string", "const": "captaincy", "title": "Action Group", "default": "captaincy" },
+          "priority": { "type": "integer", "title": "Priority" },
+          "bundle_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Bundle Id" },
+          "player": { "type": "integer", "title": "Player" },
+          "old_player": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Old Player" },
+          "ep_new": { "type": "number", "title": "Ep New" },
+          "ep_old": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Ep Old" },
+          "delta_ep": { "type": "number", "title": "Delta Ep" },
+          "captain_mode": { "type": "string", "enum": ["safe", "aggressive"], "title": "Captain Mode" },
+          "reason_code": { "type": "string", "const": "highest_captain_score", "title": "Reason Code", "default": "highest_captain_score" }
+        },
+        "type": "object",
+        "required": ["priority", "player", "ep_new", "delta_ep", "captain_mode"],
+        "title": "SetCaptainAction"
+      },
+      "SetCaptainActionExpanded": {
+        "properties": {
+          "type": { "type": "string", "const": "set_captain", "title": "Type", "default": "set_captain" },
+          "action_group": { "type": "string", "const": "captaincy", "title": "Action Group", "default": "captaincy" },
+          "priority": { "type": "integer", "title": "Priority" },
+          "bundle_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Bundle Id" },
+          "player": { "$ref": "#/components/schemas/PlayerRefExpanded" },
+          "old_player": { "anyOf": [{ "$ref": "#/components/schemas/PlayerRefExpanded" }, { "type": "null" }] },
+          "ep_new": { "type": "number", "title": "Ep New" },
+          "ep_old": { "anyOf": [{ "type": "number" }, { "type": "null" }], "title": "Ep Old" },
+          "delta_ep": { "type": "number", "title": "Delta Ep" },
+          "captain_mode": { "type": "string", "enum": ["safe", "aggressive"], "title": "Captain Mode" },
+          "reason_code": { "type": "string", "const": "highest_captain_score", "title": "Reason Code", "default": "highest_captain_score" }
+        },
+        "type": "object",
+        "required": ["priority", "player", "ep_new", "delta_ep", "captain_mode"],
+        "title": "SetCaptainActionExpanded"
+      },
+      "SetViceAction": {
+        "properties": {
+          "type": { "type": "string", "const": "set_vice", "title": "Type", "default": "set_vice" },
+          "action_group": { "type": "string", "const": "captaincy", "title": "Action Group", "default": "captaincy" },
+          "priority": { "type": "integer", "title": "Priority" },
+          "bundle_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Bundle Id" },
+          "player": { "type": "integer", "title": "Player" },
+          "old_player": { "anyOf": [{ "type": "integer" }, { "type": "null" }], "title": "Old Player" },
+          "reason_code": { "type": "string", "const": "second_best_captain", "title": "Reason Code", "default": "second_best_captain" }
+        },
+        "type": "object",
+        "required": ["priority", "player"],
+        "title": "SetViceAction"
+      },
+      "SetViceActionExpanded": {
+        "properties": {
+          "type": { "type": "string", "const": "set_vice", "title": "Type", "default": "set_vice" },
+          "action_group": { "type": "string", "const": "captaincy", "title": "Action Group", "default": "captaincy" },
+          "priority": { "type": "integer", "title": "Priority" },
+          "bundle_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Bundle Id" },
+          "player": { "$ref": "#/components/schemas/PlayerRefExpanded" },
+          "old_player": { "anyOf": [{ "$ref": "#/components/schemas/PlayerRefExpanded" }, { "type": "null" }] },
+          "reason_code": { "type": "string", "const": "second_best_captain", "title": "Reason Code", "default": "second_best_captain" }
+        },
+        "type": "object",
+        "required": ["priority", "player"],
+        "title": "SetViceActionExpanded"
+      },
+      "SwapAction": {
+        "properties": {
+          "type": { "type": "string", "const": "swap", "title": "Type", "default": "swap" },
+          "action_group": { "type": "string", "const": "lineup", "title": "Action Group", "default": "lineup" },
+          "priority": { "type": "integer", "title": "Priority" },
+          "bundle_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Bundle Id" },
+          "in_player": { "type": "integer", "title": "In Player" },
+          "out_player": { "type": "integer", "title": "Out Player" },
+          "ep_in": { "type": "number", "title": "Ep In" },
+          "ep_out": { "type": "number", "title": "Ep Out" },
+          "delta_ep": { "type": "number", "title": "Delta Ep" },
+          "why": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Why" },
+          "reason_code": { "type": "string", "const": "higher_ep", "title": "Reason Code", "default": "higher_ep" },
+          "factors": { "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }], "title": "Factors" },
+          "in_fixture": { "anyOf": [{ "$ref": "#/components/schemas/CompactFixtureCtx" }, { "type": "null" }] },
+          "out_fixture": { "anyOf": [{ "$ref": "#/components/schemas/CompactFixtureCtx" }, { "type": "null" }] }
+        },
+        "type": "object",
+        "required": ["priority", "in_player", "out_player", "ep_in", "ep_out", "delta_ep"],
+        "title": "SwapAction"
+      },
+      "SwapActionExpanded": {
+        "properties": {
+          "type": { "type": "string", "const": "swap", "title": "Type", "default": "swap" },
+          "action_group": { "type": "string", "const": "lineup", "title": "Action Group", "default": "lineup" },
+          "priority": { "type": "integer", "title": "Priority" },
+          "bundle_id": { "anyOf": [{ "type": "string" }, { "type": "null" }], "title": "Bundle Id" },
+          "in_player": { "$ref": "#/components/schemas/PlayerRefExpanded" },
+          "out_player": { "$ref": "#/components/schemas/PlayerRefExpanded" },
+          "ep_in": { "type": "number", "title": "Ep In" },
+          "ep_out": { "type": "number", "title": "Ep Out" },
+          "delta_ep": { "type": "number", "title": "Delta Ep" },
+          "reason_code": { "type": "string", "const": "higher_ep", "title": "Reason Code", "default": "higher_ep" },
+          "factors": { "anyOf": [{ "additionalProperties": true, "type": "object" }, { "type": "null" }], "title": "Factors" },
+          "in_fixture": { "anyOf": [{ "$ref": "#/components/schemas/FixtureCtxExpanded" }, { "type": "null" }] },
+          "out_fixture": { "anyOf": [{ "$ref": "#/components/schemas/FixtureCtxExpanded" }, { "type": "null" }] }
+        },
+        "type": "object",
+        "required": ["priority", "in_player", "out_player", "ep_in", "ep_out", "delta_ep"],
+        "title": "SwapActionExpanded"
+      },
+      "TemplateDifferential": {
+        "properties": {
+          "template_count": { "type": "integer", "title": "Template Count" },
+          "differential_count": { "type": "integer", "title": "Differential Count" },
+          "template_ratio": { "type": "number", "title": "Template Ratio" }
+        },
+        "type": "object",
+        "required": ["template_count", "differential_count", "template_ratio"],
+        "title": "TemplateDifferential"
+      },
+      "TransferSuggestion": {
+        "properties": {
+          "out_element": { "type": "integer", "title": "Out Element" },
+          "in_element": { "type": "integer", "title": "In Element" },
+          "reason": { "type": "string", "title": "Reason" },
+          "epdelta_gain": { "type": "number", "title": "Epdelta Gain" }
+        },
+        "type": "object",
+        "required": ["out_element", "in_element", "reason", "epdelta_gain"],
+        "title": "TransferSuggestion"
+      },
+      "TransferSuggestionExpanded": {
+        "properties": {
+          "out": { "$ref": "#/components/schemas/PlayerRefExpanded" },
+          "in_": { "$ref": "#/components/schemas/PlayerRefExpanded" },
+          "reason": { "type": "string", "title": "Reason" },
+          "epdelta_gain": { "type": "number", "title": "Epdelta Gain" }
+        },
+        "type": "object",
+        "required": ["out", "in_", "reason", "epdelta_gain"],
+        "title": "TransferSuggestionExpanded"
+      }
+    }
+  }
+}

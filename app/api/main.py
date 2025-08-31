@@ -27,7 +27,6 @@ app = FastAPI(
     description=(
         "Fantasy Premier League MCP-compatible server exposing bootstrap, fixtures, and manager tools."
     ),
-    servers=[{"url": "http://localhost:8000"}],
     lifespan=lifespan,
 )
 

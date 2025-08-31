@@ -659,10 +659,9 @@ async def get_names_index() -> NamesIndex:
     response_model_exclude_none=True,
     summary="Gameweek Planner",
     description=(
-        "Optimizes XI, bench, and captain/vice for a target GW. "
-        "By default (picks_strategy=latest), uses your last live GW squad to plan any target GW. "
-        "Set picks_strategy=exact to require picks for that GW (may 404 for future GWs). "
-        "Use expand=true for LLM-ready slots and include_transfers=true to include legal suggestions."
+        "Optimize XI, bench, and captain/vice for a target GW. "
+        "Default picks_strategy=latest uses your last live GW squad; picks_strategy=exact requires target-GW picks. "
+        "Use expand=true for denormalized fields; include_transfers adds legal suggestions."
     ),
     responses={
         200: {"description": "Planner response (compact + optional expanded)"},

@@ -14,7 +14,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy only dependency metadata first (leverage Docker cache)
-COPY pyproject.toml README.md ./
+COPY pyproject.toml README.md openapi.json ./
 
 # Install runtime deps
 RUN pip install --upgrade pip \

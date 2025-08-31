@@ -1,3 +1,6 @@
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/DavidLavu/fpl-mcp)
+
+
 # fpl-mcp
 
 FastAPI service scaffold for working with Fantasy Premier League (FPL) data. This repo includes a production-ready layout, typed settings, caching utilities, and developer tooling (Ruff, Black, pytest, pre-commit).

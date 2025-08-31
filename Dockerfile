@@ -26,4 +26,5 @@ COPY app ./app
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.api.main:app", "--host", "0.0.0.0", "--port", "${PORT:-8000}"]
+# Use shell form to allow $PORT expansion with a default
+CMD ["sh", "-c", "uvicorn app.api.main:app --host 0.0.0.0 --port ${PORT:-8000}"]

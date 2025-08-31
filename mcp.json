@@ -1,0 +1,7 @@
+{
+  "name": "fpl-mcp",
+  "version": "0.1.0",
+  "endpoints": [
+    { "name": "get_gameweek_planner", "path": "/tools/get_gameweek_planner/{tid}/{gw}", "method": "GET" }
+  ]
+}

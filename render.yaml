@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: fpl-mcp
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    autoDeploy: true
+    healthCheckPath: /health
+    envVars:
+      - key: CACHE_TTL
+        value: "300"
+
